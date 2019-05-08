@@ -8,13 +8,12 @@ jobs:
   dependsOn:
     - Buildx64
     - Buildx86
-    - Buildarm64
+#    - Buildarm64 #enable once we can build ARM64 on the hosted pool
   condition: |
     and
     (
       in(dependencies.Buildx64.result,   'Succeeded', 'SucceededWithIssues', 'Skipped'),
-      in(dependencies.Buildx86.result,   'Succeeded', 'SucceededWithIssues', 'Skipped'),
-      in(dependencies.Buildarm64.result, 'Succeeded', 'SucceededWithIssues', 'Skipped')
+      in(dependencies.Buildx86.result,   'Succeeded', 'SucceededWithIssues', 'Skipped')
     ) 
 
   variables:

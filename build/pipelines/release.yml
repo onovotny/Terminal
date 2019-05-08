@@ -19,17 +19,18 @@ jobs:
   - template: ./templates/build-console-ci.yml
     parameters:
       platform: x64
-      additionalBuildArguments: /p:WindowsTerminalReleaseBuild=true
+      additionalBuildArguments: /p:WindowsTerminalReleaseBuild=false
 
   - template: ./templates/build-console-ci.yml
     parameters:
       platform: x86
-      additionalBuildArguments: /p:WindowsTerminalReleaseBuild=true
+      additionalBuildArguments: /p:WindowsTerminalReleaseBuild=false
 
-  - template: ./templates/build-console-ci.yml
-    parameters:
-      platform: arm64
-      additionalBuildArguments: /p:WindowsTerminalReleaseBuild=true
+# TODO: looks like bits are missing on the hosted agent
+#  - template: ./templates/build-console-ci.yml
+#    parameters:
+#      platform: arm64
+#	   additionalBuildArguments: /p:WindowsTerminalReleaseBuild=false	
 
   - template: ./templates/check-formatting.yml
 
