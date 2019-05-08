@@ -1,0 +1,78 @@
+parameters:
+  configuration: 'Release'
+
+jobs:
+- job: SignDeploy${{ parameters.configuration }}
+  displayName: Sign and Deploy for ${{ parameters.configuration }}
+
+  dependsOn:
+    - Buildx64
+    - Buildx86
+    - Buildarm64
+  condition: |
+    and
+    (
+      in(dependencies.Buildx64.result,   'Succeeded', 'SucceededWithIssues', 'Skipped'),
+      in(dependencies.Buildx86.result,   'Succeeded', 'SucceededWithIssues', 'Skipped'),
+      in(dependencies.Buildarm64.result, 'Succeeded', 'SucceededWithIssues', 'Skipped')
+    ) 
+
+  variables:
+    BuildConfiguration: ${{ parameters.configuration }}
+    AppxProjectName: CascadiaPackage
+    AppxBundleName: Microsoft.WindowsTerminal_0.0.$(Build.BuildId).0_8wekyb3d8bbwe.msixbundle
+
+  pool: { vmImage: vs2017-win2016 }
+
+  steps:
+  - checkout: self
+    clean: true
+
+  - script: |
+      git config --global user.email "buildagent@localhost"
+      git config --global user.name "BuildAgent"
+      git pull https://github.com/Microsoft/Terminal master --rebase
+      git submodule update
+    displayName: Pull latest from origin    
+
+  - task: DownloadBuildArtifacts@0
+    displayName: Download AppX artifact
+    inputs:
+      artifactName: 'appinstaller'
+      itemPattern: |
+        **/*.appinstaller
+      downloadPath: '$(Build.ArtifactStagingDirectory)\bundle'
+  
+  - task: DownloadBuildArtifacts@0
+    displayName: Download AppInstaller artifacts
+    inputs:
+      artifactName: 'appx-$(BuildConfiguration)'
+      itemPattern: |
+        **/*.appx
+        **/*.msix
+      downloadPath: '$(Build.ArtifactStagingDirectory)\appx'      
+
+  - task: PowerShell@2
+    displayName: 'Create $(AppxBundleName)'
+    inputs:
+      targetType: filePath
+      filePath: '.\build\scripts\Create-AppxBundle.ps1'
+      arguments: |
+        -InputPath "$(Build.ArtifactStagingDirectory)\appx" -ProjectName $(AppxProjectName) -BundleVersion 0.0.$(Build.BuildId).0 -OutputPath "$(Build.ArtifactStagingDirectory)\bundle\$(AppxBundleName)"
+
+  - task: PowerShell@2
+    displayName: Authenticode Sign artifacts
+    inputs:
+      filePath: .\build\scripts\Sign-Package.ps1
+    env:
+      SignClientUser: $(SignClientUser)
+      SignClientSecret: $(SignClientSecret)
+      ArtifactDirectory: '$(Build.ArtifactStagingDirectory)\bundle'
+    condition: and(succeeded(), not(eq(variables['build.reason'], 'PullRequest')), not(eq(variables['SignClientSecret'], '')), not(eq(variables['SignClientUser'], '')))
+
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Signed AppX'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)\bundle'
+      ArtifactName: 'appxbundle-signed-$(BuildConfiguration)'

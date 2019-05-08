@@ -6,6 +6,13 @@ steps:
   submodules: true
   clean: true
 
+- script: |
+    git config --global user.email "buildagent@localhost"
+    git config --global user.name "BuildAgent"
+    git pull https://github.com/Microsoft/Terminal master --rebase
+    git submodule update
+  displayName: Pull latest from origin
+
 - task: NuGetToolInstaller@0
   displayName: Ensure NuGet 4.8.1
   inputs:
@@ -24,6 +31,21 @@ steps:
     configPath: NuGet.config
     restoreSolution: OpenConsole.sln
     restoreDirectory: '$(Build.SourcesDirectory)\packages'
+
+- powershell: |
+    mkdir "$(Build.ArtifactStagingDirectory)\installer"
+
+    # Update appxmanifest. These must be done before build.
+    [xml]$manifest = Get-Content ".\src\cascadia\CascadiaPackage\Package-Dev.appxmanifest"
+    $manifest.Package.Identity.Version = "0.0.$(Build.BuildId).0"
+    $manifest.Package.Properties.PublisherDisplayName = "Oren Novotny, LLC"
+    $manifest.Save(".\src\cascadia\CascadiaPackage\Package-Dev.appxmanifest")
+
+    if('$(BuildPlatform)' -eq 'x64') {
+      $doc = Get-Content ".\build\config\Microsoft.WindowsTerminal.appinstaller"    
+      $doc | % { $_.Replace("3.25.0", "0.0.$(Build.BuildId)") } | Set-Content "$(Build.ArtifactStagingDirectory)\installer\Microsoft.WindowsTerminal.appinstaller"
+    }
+  displayName: Update version to 0.0.$(Build.BuildId).0
 
 - task: VSBuild@1
   displayName: 'Build solution **\OpenConsole.sln'
@@ -98,4 +120,11 @@ steps:
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)/appx'
     ArtifactName: 'appx-$(BuildConfiguration)'
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish AppInstaller (Non-PR builds only)'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/installer'
+    ArtifactName: 'appinstaller'
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))

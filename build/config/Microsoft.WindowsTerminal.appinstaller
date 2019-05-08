@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AppInstaller Uri="https://terminalunofficial.z13.web.core.windows.net/nightly/Microsoft.WindowsTerminal.appinstaller" Version="3.25.0.0" xmlns="http://schemas.microsoft.com/appx/appinstaller/2017/2">
+  <MainBundle Name="WindowsTerminalDev" Version="3.25.0.0" Publisher="CN=3466D5D7-00EE-41FA-A7A4-6F7CA3E1C7F8" Uri="https://terminalunofficial.z13.web.core.windows.net/nightly/Microsoft.WindowsTerminal_3.25.0.0_8wekyb3d8bbwe.msixbundle" />
+  <UpdateSettings>
+    <OnLaunch HoursBetweenUpdateChecks="4" />
+    <AutomaticBackgroundTask/>
+  </UpdateSettings>
+</AppInstaller>

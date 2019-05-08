@@ -14,4 +14,4 @@ jobs:
   steps:
   - template: build-console-steps.yml
     parameters:
-      additionalBuildArguments: ${{ parameters.additionalBuildArguments }}
+      additionalBuildArguments: '/p:XesUseOneStoreVersioning=true;XesBaseYearForStoreVersion=$(baseYearForVersioning) ${{ parameters.additionalBuildArguments }}'
