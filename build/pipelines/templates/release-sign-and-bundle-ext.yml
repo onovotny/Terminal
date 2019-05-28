@@ -6,14 +6,14 @@ jobs:
   displayName: Sign and Deploy for ${{ parameters.configuration }}
 
   dependsOn:
-    - Buildx64
-    - Buildx86
+    - Buildx64Release
+    - Buildx86Release
 #    - Buildarm64 #enable once we can build ARM64 on the hosted pool
   condition: |
     and
     (
-      in(dependencies.Buildx64.result,   'Succeeded', 'SucceededWithIssues', 'Skipped'),
-      in(dependencies.Buildx86.result,   'Succeeded', 'SucceededWithIssues', 'Skipped')
+      in(dependencies.Buildx64Release.result,   'Succeeded', 'SucceededWithIssues', 'Skipped'),
+      in(dependencies.Buildx86Release.result,   'Succeeded', 'SucceededWithIssues', 'Skipped')
     ) 
 
   variables:
