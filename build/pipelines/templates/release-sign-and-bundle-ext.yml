@@ -21,7 +21,7 @@ jobs:
     AppxProjectName: CascadiaPackage
     AppxBundleName: Microsoft.WindowsTerminal_0.0.$(Build.BuildId).0_8wekyb3d8bbwe.msixbundle
 
-  pool: { vmImage: vs2017-win2016 }
+  pool: { vmImage: windows-2019 }
 
   steps:
   - checkout: self
